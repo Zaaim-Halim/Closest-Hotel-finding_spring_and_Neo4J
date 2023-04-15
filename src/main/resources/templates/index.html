@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<title>big-data</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:400" rel="stylesheet" />
+	<link href="fontawesome/css/all.min.css" rel="stylesheet" />
+	<link href="css/templatemo-comparto.css" rel="stylesheet" />
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous" />
+	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+	<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+	<link rel="stylesheet" href="http://leaflet.github.io/Leaflet.markercluster/dist/MarkerCluster.css" />
+	<link rel="stylesheet" href="http://leaflet.github.io/Leaflet.markercluster/dist/MarkerCluster.Default.css" />
+	<script src="http://leaflet.github.io/Leaflet.markercluster/dist/leaflet.markercluster-src.js"></script>
+	<!-- <script src="mapdata.geojson" type="text/javascript"></script> -->
+    <link rel="icon" href="img/log.png">
+	<style type="text/css">
+		#map {
+			height: 515px;
+		}
+
+		.huechange {
+			filter: hue-rotate(120deg);
+			color: red;
+		}
+
+		.loader {
+			position: absolute;
+
+			top: 50%;
+			left: 50%;
+			margin-top: -50px;
+			margin-left: -50px;
+			border: 8px solid rgb(182, 227, 248);
+			/* Light grey */
+			border-top: 8px solid rgb(174, 40, 192);
+			/* Blue */
+			border-radius: 50%;
+			width: 60px;
+			height: 60px;
+			animation: spin 2s linear infinite;
+		}
+
+		@keyframes spin {
+			0% {
+				transform: rotate(0deg);
+			}
+
+			100% {
+				transform: rotate(360deg);
+			}
+		}
+
+		.hidden {
+			display: none;
+		}
+	</style>
+</head>
+
+<body>
+	<!-- Back to top button -->
+	<a id="button"><i class="fas fa-angle-up fa-2x"></i></a>
+	<div class="container-fluid">
+		<div class="tm-bg-color-1 mb-2 tm-row tm-social-row">
+			<div class="tm-icon">
+				<div class="tm-icon-inner mt-2">
+					<a href="#services"> <i class="fas fa-hotel fa-2x tm-mb-1"></i>
+						<p style="font-size: 18px;"><strong>Hotel Finding - Fez city</strong></p>
+					</a>
+				</div>
+			</div>
+			<div class="tm-icon">
+				<div class="tm-icon-inner mt-2">
+					<a href="#gallery" c> 
+						<p><strong>Université Sidi Mohamed Ben Abdellah: </strong>Big Data - MIDVI</p>
+					</a>
+				</div>
+			</div>
+			<div class="tm-icon">
+				<div class="tm-icon-inner">
+					<a href="#gallery">
+						<p>ZAAIM HALIM , EL-HOUSSINE MAIMAI , TARIQ JARRARI , MOHAMMED EL
+							KHALFAOUI</p>
+					</a>
+				</div>
+			</div>
+		</div>
+		<section class="tm-mb-1 tm-row tm-services-row" id="services">
+			<div class="tm-section-2-l">
+				<article class="tm-bg-color-6 tm-box-pad tm-mb-1 mb-4" style="height: 257px">
+					<h4 class="tm-mb-2 text-center">recherche manuelle : location
+						géographique</h4>
+					<form id="manu" onsubmit="submitInfoManu(event);">
+						<div class="row g-3">
+							<div class="col">
+								<input type="text" class="form-control" placeholder="Lattitude" id="lat" value="" />
+							</div>
+							<div class="col">
+								<input type="text" class="form-control" placeholder="Longutide" id="lon" value="" />
+							</div>
+						</div>
+						<div class="row g-3 mt-2">
+							<div class="col">
+								<input type="number" min="1" max="5" id="nbResult" value="1" class="form-control"
+									placeholder="nb d'hotels" />
+							</div>
+							<div class="col">
+								<input type="submit" class="form-control btn btn-success"
+									onsubmit="submitInfoManu(event);" value="chercher" />
+							</div>
+						</div>
+					</form>
+				</article>
+				<div class="tm-bg-color-6 tm-box-pad" style="height: 260">
+					<h4 class="tm-mb-2 text-center">recherche automatique</h4>
+					<form id="auto">
+
+						<div class="row g-3 mt-2">
+							<div class="col">
+								<input type="number" min="1" max="5" id="nbResult2" value="1" class="form-control"
+									placeholder="nb d'hotels" />
+							</div>
+							<div class="col">
+								<input class="form-control btn btn-success" type="submit" value="chercher"
+									onclick="submitInfoAuto(event);">
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			<div class="tm-section-2-r">
+				<div id="map"></div>
+			</div>
+		</section>
+		<footer class="text-center tm-mb-1">
+			<p style="color:#fff;">Copyright &copy; 2021 MASTER MIDVI</p>
+		</footer>
+	</div>
+
+	<div class="loader hidden" id="loader" height="100%" width="100%"><strong></strong></div>
+	<!-- Modal Details hotel -->
+	<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+		aria-labelledby="staticBackdropLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">...</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary">Understood</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- .container -->
+	<script src="js/jquery-3.1.1.min.js"></script>
+	<!-- https://jquery.com/download/ -->
+	<script src="js/imagesloaded.pkgd.min.js"></script>
+	<!-- https://imagesloaded.desandro.com/ -->
+	<script src="js/isotope.pkgd.min.js"></script>
+	<!-- https://isotope.metafizzy.co/ -->
+	<script src="js/jquery.singlePageNav.min.js"></script>
+	<!-- https://github.com/ChrisWojcik/single-page-nav -->
+	<script>
+		var map = L.map("map").setView([34.0411, -5.0034], 13);
+		L.tileLayer(
+			"http://{s}.tile.osm.org/{z}/{x}/{y}.png",
+			{
+				attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+			}).addTo(map);
+
+
+	</script>
+	<script>
+		var coord;
+		var options = {
+			enableHighAccuracy: true,
+			timeout: 5000,
+			maximumAge: 0,
+		};
+
+		function success(pos) {
+			coord = pos.coords;
+
+			console.log("Votre position actuelle est :");
+			console.log(`Latitude : ${coord.latitude}`);
+			console.log(`Longitude : ${coord.longitude}`);
+			console.log(`La précision est de ${coord.accuracy} mètres.`);
+		}
+		navigator.geolocation.getCurrentPosition(success, error, options);
+		function error(err) {
+			console.warn(`ERREUR (${err.code}): ${err.message}`);
+		}
+
+		function submitInfoAuto(event) {
+			event.preventDefault();
+			$("#loader").removeClass('hidden');
+			var nbResult = $("#nbResult2").val();
+			$.ajax({
+				type: "GET",
+				url: "/find/" + coord.latitude + "/" + coord.longitude + "/" + nbResult,
+				processData: false,
+				contentType: false,
+				cache: false,
+				timeout: 6000000,
+				success: function (data) {
+					console.log(data);
+					$("#loader").addClass('hidden');
+					var source = data[0]["source"];
+					var marker = L.marker([source.lat, source.lon]).addTo(map).bindPopup('votre localisation')
+						.openPopup();
+					marker._icon.classList.add("huechange")
+
+					for (var i = 0; i < data.length; i++) {
+						var destination = data[i]["destination"];
+						L.marker([destination.lat, destination.lon]).addTo(map).bindPopup(
+							/*destination.nameAR + ' - ' +*/ destination.name + '</br>' + data[i].totalCost + "m")
+							.openPopup();
+
+						var path = data[i]["path"];
+
+						var c = [];
+						c.push([source.lat, source.lon]);
+						for (var j = 0; j < path.length; j++) {
+							c.push([path[j].lat, path[j].lon]);
+						}
+						L.polyline(c).addTo(map);
+						c = [];
+					}
+
+				},
+				error: function (e) {
+
+					$(".error-submit").removeClass("d-none");
+
+				}
+			});
+		}
+
+		function submitInfoManu(event) {
+			event.preventDefault();
+			$("#loader").removeClass('hidden');
+			var nbResult = $("#nbResult").val();
+			var lat = $("#lat").val();
+			var lon = $("#lon").val();
+
+			$.ajax({
+				type: "GET",
+				url: "/find/" + lat + "/" + lon + "/" + nbResult,
+				processData: false,
+				contentType: false,
+				cache: false,
+				timeout: 6000000,
+				success: function (data) {
+					console.log(data);
+                    $("#loader").addClass('hidden');
+					var source = data[0]["source"];
+					var marker = L.marker([source.lat, source.lon]).addTo(map).bindPopup('votre localisation')
+						.openPopup();
+					marker._icon.classList.add("huechange")
+
+					for (var i = 0; i < data.length; i++) {
+						var destination = data[i]["destination"];
+						L.marker([destination.lat, destination.lon]).addTo(map).bindPopup(
+							/*destination.nameAR + ' - ' +*/ destination.name + '</br>' + data[i].totalCost + "m")
+							.openPopup();
+
+						var path = data[i]["path"];
+
+						var c = [];
+						c.push([source.lat, source.lon]);
+						for (var j = 0; j < path.length; j++) {
+							c.push([path[j].lat, path[j].lon]);
+						}
+						L.polyline(c).addTo(map);
+						c = [];
+					}
+
+				},
+				error: function (e) {
+
+					$(".error-submit").removeClass("d-none");
+
+				}
+			});
+		}
+		
+		function clearMarkers(){
+			var markers = L.markerClusterGroup()
+
+			/* delete method */
+			map.eachLayer(function(layer) {
+			    if (layer instanceof L.MarkerClusterGroup)
+			    {
+			        map.removeLayer(layer)
+			    }
+			})
+
+			dataset.forEach(function(item)
+			{
+			    var marker = L.marker(item.coordinates, {
+			        icon: L.divIcon({
+			            html: `<div><span>1</span></div>`,
+			            className: 'leaflet-div-icon'
+			        })
+			    })
+
+			    markers.addLayer(marker)
+			})
+
+			map.addLayer(markers)
+		}
+
+	</script>
+</body>
+
+</html>
